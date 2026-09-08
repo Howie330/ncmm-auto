@@ -35,6 +35,15 @@ jobs:
           printf '%s' "$NCMM_MAIN_COOKIE" > cookie.txt
           ./ncmm --home "$HOME/ncmm-home" login cookie -f cookie.txt -m
 
+      - name: 清理默认示例辅助账号 (消除 fan1/fan2 失效噪声)
+        continue-on-error: true
+        run: |
+          CFG="$HOME/ncmm-home/config.yaml"
+          if [ -f "$CFG" ]; then
+            python3 -c "import re,sys; p=sys.argv[1]; s=open(p,encoding='utf-8').read(); s=re.sub(r'(?m)^(\s*)secondary\s*:\s*\[[^\]]*\]\s*\$', r'\1secondary: []', s); s=re.sub(r'(?m)^(\s*)secondary\s*:\s*\n(?:\s*-\s*[^\n]*\n)+', r'\1secondary: []\n', s); s='\n'.join(l for l in s.split('\n') if 'fan1.json' not in l and 'fan2.json' not in l); open(p,'w',encoding='utf-8').write(s); print('secondary cleaned')" "$CFG"
+            grep -n "secondary" "$CFG" || true
+          fi
+
       - name: 运行全部批量任务 (签到/云贝/乐迷团/推歌等)
         run: |
           ./ncmm --home "$HOME/ncmm-home" task 2>&1 | tee task.log
