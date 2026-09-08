@@ -32,7 +32,8 @@ jobs:
         env:
           NCMM_MAIN_COOKIE: ${{ secrets.NCMM_MAIN_COOKIE }}
         run: |
-          ./ncmm --home "$HOME/ncmm-home" login cookie "$NCMM_MAIN_COOKIE" -m
+          printf '%s' "$NCMM_MAIN_COOKIE" > cookie.txt
+          ./ncmm --home "$HOME/ncmm-home" login cookie -f cookie.txt -m
 
       - name: 运行全部批量任务 (签到/云贝/乐迷团/推歌等)
         run: |
