@@ -1,0 +1,53 @@
+name: ncmm daily tasks
+
+on:
+  schedule:
+    # GitHub 用 UTC。下面对应北京时间每天 0:09 与 13:09 各跑一次
+    - cron: '9 16,5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ncmm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 下载 ncmm (Linux)
+        run: |
+          VER=$(curl -sL https://api.github.com/repos/3899/ncmm/releases/latest | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
+          echo "ncmm version: $VER"
+          URL="https://github.com/3899/ncmm/releases/download/${VER}/ncmm_Linux_x86_64.tar.gz"
+          echo "Downloading $URL"
+          curl -fL -o ncmm.tar.gz "$URL"
+          tar -xzf ncmm.tar.gz
+          chmod +x ncmm
+          ./ncmm --version
+
+      - name: 准备 home 目录
+        run: mkdir -p "$HOME/ncmm-home"
+
+      - name: Cookie 登录主账号
+        env:
+          NCMM_MAIN_COOKIE: ${{ secrets.NCMM_MAIN_COOKIE }}
+        run: |
+          ./ncmm --home "$HOME/ncmm-home" login cookie "$NCMM_MAIN_COOKIE" -m
+
+      - name: 运行全部批量任务 (签到/云贝/乐迷团/推歌等)
+        run: |
+          ./ncmm --home "$HOME/ncmm-home" task
+
+      - name: 运行音乐人任务 (需已认证音乐人，否则自动跳过)
+        run: |
+          ./ncmm --home "$HOME/ncmm-home" musician || true
+
+      - name: 上传运行日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ncmm-logs
+          path: |
+            ${{ env.HOME }}/ncmm-home/*.log
+            ${{ env.HOME }}/ncmm-home/logs/
+          retention-days: 7
