@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   ncmm:
@@ -53,3 +54,23 @@ jobs:
             musician.log
           retention-days: 7
           if-no-files-found: warn
+
+      - name: 失败时自动开 Issue 提醒 (如 Cookie 失效)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create ncmm-alert --color d73a4a --description "ncmm run alert" 2>/dev/null || true
+          COUNT=$(gh issue list --state open --label ncmm-alert --json number --jq 'length')
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "已存在 $COUNT 个未关闭的告警 Issue，跳过创建"
+          else
+            gh issue create \
+              --title "ncmm 云端任务执行失败（多为 Cookie 失效）" \
+              --label ncmm-alert \
+              --body "云端 ncmm 任务执行失败，最常见原因是网易云 Cookie 失效。
+
+**处理办法**：更新仓库 Secret \`NCMM_MAIN_COOKIE\`（从本机 C:\\ncmm\\cookie.json 取 MUSIC_U 与 __csrf，或重新扫码登录后更新）。
+
+本次运行日志：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi
