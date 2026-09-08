@@ -65,12 +65,5 @@ jobs:
           if [ "${COUNT:-0}" -gt 0 ]; then
             echo "已存在 $COUNT 个未关闭的告警 Issue，跳过创建"
           else
-            gh issue create \
-              --title "ncmm 云端任务执行失败（多为 Cookie 失效）" \
-              --label ncmm-alert \
-              --body "云端 ncmm 任务执行失败，最常见原因是网易云 Cookie 失效。
-
-**处理办法**：更新仓库 Secret \`NCMM_MAIN_COOKIE\`（从本机 C:\\ncmm\\cookie.json 取 MUSIC_U 与 __csrf，或重新扫码登录后更新）。
-
-本次运行日志：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            gh issue create --title "ncmm 云端任务执行失败（多为 Cookie 失效）" --label ncmm-alert --body "云端 ncmm 任务执行失败，最常见原因是网易云 Cookie 失效。处理办法：更新仓库 Secret NCMM_MAIN_COOKIE（从本机 C:\\ncmm\\cookie.json 取 MUSIC_U 与 __csrf，或重新扫码登录后更新）。运行日志：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           fi
