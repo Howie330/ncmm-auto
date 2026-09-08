@@ -12,7 +12,7 @@ permissions:
 jobs:
   ncmm:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - name: 下载 ncmm (Linux)
         run: |
@@ -37,11 +37,11 @@ jobs:
 
       - name: 运行全部批量任务 (签到/云贝/乐迷团/推歌等)
         run: |
-          ./ncmm --home "$HOME/ncmm-home" task
+          ./ncmm --home "$HOME/ncmm-home" task 2>&1 | tee task.log
 
       - name: 运行音乐人任务 (需已认证音乐人，否则自动跳过)
         run: |
-          ./ncmm --home "$HOME/ncmm-home" musician || true
+          ./ncmm --home "$HOME/ncmm-home" musician 2>&1 | tee musician.log || true
 
       - name: 上传运行日志
         if: always()
@@ -49,6 +49,7 @@ jobs:
         with:
           name: ncmm-logs
           path: |
-            ${{ env.HOME }}/ncmm-home/*.log
-            ${{ env.HOME }}/ncmm-home/logs/
+            task.log
+            musician.log
           retention-days: 7
+          if-no-files-found: warn
